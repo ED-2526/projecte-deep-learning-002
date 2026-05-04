@@ -52,11 +52,11 @@ if __name__ == "__main__":
     wandb.login()
 
     config = dict(
-        epochs=10,
+        epochs=30,
         classes=25,
-        kernels=[16, 32, 64],
+        kernels=[32, 64, 128],
         batch_size=64,
-        learning_rate=1e-3,
+        learning_rate=5e-4,
         dataset="WikiArt",
         architecture="CNN")
 

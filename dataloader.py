@@ -22,7 +22,9 @@ categories = [
     'Action_painting',
     'Analytical_Cubism',
     'Art_Nouveau_Modern',
-    'Baroque'
+    'Baroque',
+    'Color_Field_Painting',
+    'Contemporary_Realism'
 ]
 
 # ─────────────────────────────────────────────

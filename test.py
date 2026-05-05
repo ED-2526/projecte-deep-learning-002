@@ -69,7 +69,7 @@ def test(model, test_loader, device="cuda", save: bool = True):
     print(cm)
 
     # Guardar imagen de la matriz
-    plt.figure(figsize=(28, 14))
+    plt.figure(figsize=(32, 18))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title("Matriz de Confusión")
     plt.colorbar()
@@ -161,9 +161,11 @@ def test(model, test_loader, device="cuda", save: bool = True):
     if save:
         print("\nExportando modelo a ONNX...")
 
+        dummy_input = torch.randn(1, 3, 128, 128).to(device)
+
         torch.onnx.export(
             model,
-            images,
+            dummy_input,
             "model.onnx",
             export_params=True,
             opset_version=10,

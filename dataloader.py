@@ -25,6 +25,26 @@ categories = [
     'Baroque',
     'Color_Field_Painting',
     'Contemporary_Realism'
+    'Cubism',
+    'Early_Renaissance',
+    'Expressionism',
+    'Fauvism',
+    'High_Renaissance',
+    'Impressionism',
+    'Mannerism_Late_Renaissan',
+    'Minimalism',
+    'Naive_Art_Primitivism',
+    'New_Realism',
+    'Northern_Renaissance',
+    'Pointillism',
+    'Pop_Art',
+    'Post_Impressionism',
+    'Realism',
+    'Rococo',
+    'Romanticism',
+    'Symbolism',
+    'Synthetic_Cubism',
+    'Ukiyo_e'
 ]
 
 # ─────────────────────────────────────────────
@@ -196,7 +216,7 @@ imatges_per_autor = df_filtrat['artist'].value_counts()
 
 print(f"Total autors únics: {len(imatges_per_autor)}")
 
-top_n       = 30
+top_n       = 100
 top_autors  = imatges_per_autor.head(top_n)
 
 os.makedirs(output_folder, exist_ok=True)

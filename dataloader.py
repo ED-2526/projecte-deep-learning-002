@@ -17,6 +17,7 @@ output_folder = '/home/edxnG02/processedImages'
 classes_csv   = os.path.join(input_base, 'classes.csv')
 target_size   = (128, 128)
 
+
 categories = [
     'Abstract_Expressionism',
     'Action_painting',
@@ -24,14 +25,14 @@ categories = [
     'Art_Nouveau_Modern',
     'Baroque',
     'Color_Field_Painting',
-    'Contemporary_Realism'
+    'Contemporary_Realism',
     'Cubism',
     'Early_Renaissance',
     'Expressionism',
     'Fauvism',
     'High_Renaissance',
     'Impressionism',
-    'Mannerism_Late_Renaissan',
+    'Mannerism_Late_Renaissance',
     'Minimalism',
     'Naive_Art_Primitivism',
     'New_Realism',
@@ -46,6 +47,7 @@ categories = [
     'Synthetic_Cubism',
     'Ukiyo_e'
 ]
+
 
 # ─────────────────────────────────────────────
 # CARGAR CSV

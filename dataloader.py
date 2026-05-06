@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore')
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 input_base    = '/home/datasets/wikiart'
-output_folder = '/home/edxnG02/processedImages'
+output_folder = '/home/edxnG02/processedImages_total'
 classes_csv   = os.path.join(input_base, 'classes.csv')
 target_size   = (128, 128)
 

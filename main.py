@@ -4,8 +4,6 @@ import wandb
 import numpy as np
 import torch
 import torch.nn as nn
-import torchvision
-import torchvision.transforms as transforms
 
 from train import *
 from test import *
@@ -22,7 +20,7 @@ torch.manual_seed(hash("by removing stochasticity") % 2**32 - 1)
 torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
 
 # ─────────────────────────────────────────────
-# DISPOSITIVO — GPU si disponible, sino CPU
+# DISPOSITIVO
 # ─────────────────────────────────────────────
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Usando dispositivo: {device}")
@@ -31,18 +29,13 @@ print(f"Usando dispositivo: {device}")
 # PIPELINE PRINCIPAL
 # ─────────────────────────────────────────────
 def model_pipeline(cfg: dict) -> None:
-    with wandb.init(project="wikiart-autor-classification", config=cfg):
+    with wandb.init(project="wikiart-style-classification", config=cfg):  # ← nombre proyecto cambiado
         config = wandb.config
-
-        # Cargar datos, modelo, loss y optimizador
-        model, train_loader, test_loader, criterion, optimizer = make(config, device=device)
-
-        # Entrenar
-        train(model, train_loader, criterion, optimizer, config, device=device)
-
-        # Evaluar
+        model, train_loader, val_loader, test_loader, criterion, optimizer = make(config, device=device)
+        train(model, train_loader, val_loader, criterion, optimizer, config, device=device)
+        # Carreguem el millor model guardat durant l'entrenament
+        model.load_state_dict(torch.load("best_model.pth"))
         test(model, test_loader, device=device)
-
     return model
 
 # ─────────────────────────────────────────────
@@ -52,13 +45,14 @@ if __name__ == "__main__":
     wandb.login()
 
     config = dict(
-    epochs=30,
-    classes=29,
-    kernels=[32, 64, 128, 256],
-    batch_size=32,
-    learning_rate=3e-4,
-    dataset="WikiArt",
-    architecture="CNN")
+        epochs=30,
+        classes=13,
+        kernels=[32, 64, 128, 256],  # 4 capes conv
+        batch_size=64,
+        learning_rate=5e-4,
+        dataset="WikiArt",
+        architecture="CNN",
+        task="style_classification"
+    )
 
     model = model_pipeline(config)
-

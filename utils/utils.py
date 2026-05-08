@@ -1,3 +1,4 @@
+import os
 import wandb
 import torch
 import torch.nn as nn
@@ -17,17 +18,20 @@ TEST_DIR  = '/home/edxnG02/split/test'
 # TRANSFORMACIONES
 # ─────────────────────────────────────────────
 train_transforms = transforms.Compose([
-    transforms.Resize((128, 128)),
+    transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(),
-    transforms.RandomRotation(10),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2),
+    transforms.RandomVerticalFlip(p=0.1),
+    transforms.RandomRotation(15),
+    transforms.ColorJitter(brightness=0.3, contrast=0.3,
+                           saturation=0.2, hue=0.1),
+    transforms.RandomGrayscale(p=0.05),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225])
 ])
 
 test_transforms = transforms.Compose([
-    transforms.Resize((128, 128)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225])

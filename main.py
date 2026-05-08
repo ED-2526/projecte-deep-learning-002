@@ -52,13 +52,13 @@ if __name__ == "__main__":
     wandb.login()
 
     config = dict(
-        epochs=30,
-        classes=25,
-        kernels=[32, 64, 128],
-        batch_size=64,
-        learning_rate=5e-4,
-        dataset="WikiArt",
-        architecture="CNN")
+    epochs=30,
+    classes=29,
+    kernels=[32, 64, 128, 256],
+    batch_size=32,
+    learning_rate=3e-4,
+    dataset="WikiArt",
+    architecture="CNN")
 
     model = model_pipeline(config)
 

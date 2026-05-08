@@ -161,14 +161,14 @@ def test(model, test_loader, device="cuda", save: bool = True):
     if save:
         print("\nExportando modelo a ONNX...")
 
-        dummy_input = torch.randn(1, 3, 128, 128).to(device)
+        dummy_input = torch.randn(1, 3, 224, 224).to(device)
 
         torch.onnx.export(
             model,
             dummy_input,
             "model.onnx",
             export_params=True,
-            opset_version=10,
+            opset_version=18,
             do_constant_folding=True,
             input_names=['input'],
             output_names=['output'],

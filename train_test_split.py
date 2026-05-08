@@ -1,14 +1,16 @@
 import os
 import shutil
 import random
+import matplotlib.pyplot as plt
 from collections import defaultdict
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
-input_folder  = '/home/edxnG02/processedImages'
+input_folder  = '/home/edxnG02/processedImages_total'
 output_folder = '/home/edxnG02/split'
-min_images    = 100
+min_images    = 400   
+max_images    = 600   
 train_ratio   = 0.8
 random.seed(42)
 
@@ -19,7 +21,27 @@ categories = [
     'Art_Nouveau_Modern',
     'Baroque',
     'Color_Field_Painting',
-    'Contemporary_Realism'
+    'Contemporary_Realism',
+    'Cubism',
+    'Early_Renaissance',
+    'Expressionism',
+    'Fauvism',
+    'High_Renaissance',
+    'Impressionism',
+    'Mannerism_Late_Renaissance',
+    'Minimalism',
+    'Naive_Art_Primitivism',
+    'New_Realism',
+    'Northern_Renaissance',
+    'Pointillism',
+    'Pop_Art',
+    'Post_Impressionism',
+    'Realism',
+    'Rococo',
+    'Romanticism',
+    'Symbolism',
+    'Synthetic_Cubism',
+    'Ukiyo_e'
 ]
 
 # ─────────────────────────────────────────────
@@ -39,15 +61,19 @@ for category in categories:
             autor_imagenes[autor].append(os.path.join(cat_path, filename))
 
 # ─────────────────────────────────────────────
-# FILTRAR AUTORES CON MÁS DE 100 IMÁGENES
+# FILTRAR: mínimo 400, capear a 600
 # ─────────────────────────────────────────────
-print(f"\nFiltrando autores con más de {min_images} imágenes...")
-autores_validos = {autor: imgs for autor, imgs in autor_imagenes.items() 
-                   if len(imgs) >= min_images}
+print(f"\nFiltrando autores con mínimo {min_images} imágenes (máximo {max_images})...")
+
+autores_validos = {}
+for autor, imgs in autor_imagenes.items():
+    if len(imgs) >= min_images:
+        random.shuffle(imgs)
+        autores_validos[autor] = imgs[:max_images]  # ← capping aquí, antes del split
 
 print(f"Autores válidos: {len(autores_validos)}")
 for autor, imgs in sorted(autores_validos.items(), key=lambda x: -len(x[1])):
-    print(f"  {autor}: {len(imgs)} imágenes")
+    print(f"  {autor}: {len(imgs)} imágenes (usadas para train/test)")
 
 # ─────────────────────────────────────────────
 # CREAR SPLIT TRAIN / TEST
@@ -58,7 +84,6 @@ total_train = 0
 total_test  = 0
 
 for autor, imagenes in autores_validos.items():
-    random.shuffle(imagenes)
     n_train = int(len(imagenes) * train_ratio)
     
     train_imgs = imagenes[:n_train]
@@ -87,3 +112,35 @@ print(f"TOTAL test  : {total_test}")
 print(f"Autores     : {len(autores_validos)}")
 print(f"Guardat a   : {output_folder}")
 print(f"{'='*50}")
+
+# ─────────────────────────────────────────────
+# HISTOGRAMA AUTORES FINALES
+# ─────────────────────────────────────────────
+print("\nGenerando histograma de autores finales...")
+
+autors_ordenats = sorted(autores_validos.items(), key=lambda x: -len(x[1]))
+noms   = [a[0] for a in autors_ordenats]
+counts = [len(a[1]) for a in autors_ordenats]
+
+fig, ax = plt.subplots(figsize=(16, 7))
+bars = ax.bar(range(len(noms)), counts, color='steelblue', edgecolor='white')
+ax.set_xticks(range(len(noms)))
+ax.set_xticklabels(noms, rotation=45, ha='right', fontsize=9)
+ax.set_title(f'Autors seleccionats per al model (min {min_images} – max {max_images} imatges)', 
+             fontsize=14, fontweight='bold')
+ax.set_xlabel('Autor')
+ax.set_ylabel("Nombre d'imatges usades")
+ax.set_ylim(0, max_images + 50)
+ax.grid(axis='y', alpha=0.3)
+ax.axhline(y=min_images, color='red',    linestyle='--', alpha=0.6, label=f'Mínim ({min_images})')
+ax.axhline(y=max_images, color='orange', linestyle='--', alpha=0.6, label=f'Màxim ({max_images})')
+ax.legend()
+
+for i, v in enumerate(counts):
+    ax.text(i, v + 5, str(v), ha='center', va='bottom', fontsize=8)
+
+plt.tight_layout()
+hist_path = os.path.join(output_folder, 'histograma_autors_finals.png')
+plt.savefig(hist_path, dpi=150, bbox_inches='tight')
+plt.show()
+print(f"Histograma guardat a: {hist_path}")

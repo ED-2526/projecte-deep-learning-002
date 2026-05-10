@@ -45,7 +45,7 @@ if __name__ == "__main__":
     wandb.login()
 
     config = dict(
-        epochs=30,
+        epochs=3,
         classes=13,
         kernels=[32, 64, 128, 256],  # 4 capes conv
         batch_size=64,

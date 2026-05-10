@@ -159,16 +159,31 @@ def test(model, test_loader, device="cuda", save: bool = True):
     # EXPORTAR MODELO
     # ─────────────────────────────────────────────
     if save:
+        print("\nGuardant model com a TorchScript...")
+
+        model.eval()
+        dummy_input = torch.randn(1, 3, 128, 128).to(device)
+        
+        scripted = torch.jit.trace(model, dummy_input)
+        scripted.save("model_scripted.pt")
+        
+        wandb.save("model_scripted.pt")
+        wandb.save("confusion_matrix.png")
+        
+        print("Model guardat correctament.")
+
+"""
+    if save:
         print("\nExportando modelo a ONNX...")
 
-        dummy_input = torch.randn(1, 3, 224, 224).to(device)
+        dummy_input = torch.randn(1, 3, 118, 118).to(device)
 
         torch.onnx.export(
             model,
             dummy_input,
             "model.onnx",
             export_params=True,
-            opset_version=18,
+            opset_version=11,
             do_constant_folding=True,
             input_names=['input'],
             output_names=['output'],
@@ -182,3 +197,4 @@ def test(model, test_loader, device="cuda", save: bool = True):
         wandb.save("confusion_matrix.png")
 
     print("\nEvaluación completada correctamente.")
+    """ 

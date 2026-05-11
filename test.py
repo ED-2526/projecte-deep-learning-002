@@ -162,7 +162,7 @@ def test(model, test_loader, device="cuda", save: bool = True):
         print("\nGuardant model com a TorchScript...")
 
         model.eval()
-        dummy_input = torch.randn(1, 3, 128, 128).to(device)
+        dummy_input = torch.randn(1, 3, 224, 224).to(device)
         
         scripted = torch.jit.trace(model, dummy_input)
         scripted.save("model_scripted.pt")

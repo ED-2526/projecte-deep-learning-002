@@ -45,13 +45,13 @@ if __name__ == "__main__":
     wandb.login()
 
     config = dict(
-        epochs=3,
+        epochs=30,
         classes=13,
-        kernels=[32, 64, 128, 256],  # 4 capes conv
-        batch_size=64,
-        learning_rate=5e-4,
+        kernels=[],           # ya no se usa pero lo dejamos para no romper nada
+        batch_size=32,        # reducido de 64 a 32 porque 224x224 ocupa más VRAM
+        learning_rate=1e-3,   # lr inicial para la cabeza en fase 1
         dataset="WikiArt",
-        architecture="CNN",
+        architecture="ResNet18",
         task="style_classification"
     )
 

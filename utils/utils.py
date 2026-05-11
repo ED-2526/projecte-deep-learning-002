@@ -5,54 +5,46 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.models import WikiArtCNN
+from models.models import WikiArtResNet  # ← cambiado de WikiArtCNN a WikiArtResNet
 
-# ─────────────────────────────────────────────
-# RUTAS DEL SPLIT  (ajusta si es necesario)
-# ─────────────────────────────────────────────
 TRAIN_DIR = '/home/edxnG02/split_style/train'
 VAL_DIR   = '/home/edxnG02/split_style/val'
 TEST_DIR  = '/home/edxnG02/split_style/test'
 
-# ─────────────────────────────────────────────
-# FUNCIÓN PRINCIPAL: make()
-# ─────────────────────────────────────────────
 def make(config, device="cuda"):
-    model                       = make_model(config, device)
+    model                        = make_model(config, device)
     train_ldr, val_ldr, test_ldr = make_loaders(config)
-    criterion                   = nn.CrossEntropyLoss()
-    optimizer                   = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+    
+    # label_smoothing=0.1 → en lugar de aprender "100% Impresionismo"
+    # aprende "90% Impresionismo, 10% resto" — más robusto
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    
+    # AdamW con weight_decay → penaliza pesos grandes, reduce overfitting
+    # Solo optimiza parámetros que NO están congelados (la cabeza)
+    optimizer = torch.optim.AdamW(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr=config.learning_rate,
+        weight_decay=1e-4
+    )
     return model, train_ldr, val_ldr, test_ldr, criterion, optimizer
 
 
-# ─────────────────────────────────────────────
-# DATA LOADERS  —  ImageFolder lee las subcarpetas
-# como clases automáticamente:
-#   split_style/train/Abstract_Expressionism/ → clase 0
-#   split_style/train/Action_painting/        → clase 1
-#   ...
-# ─────────────────────────────────────────────
 def make_loaders(config):
+    # 224x224 porque ResNet-18 fue diseñada para este tamaño
     train_transform = transforms.Compose([
-        transforms.Resize((148, 148)),          # una mica més gran per poder fer crop
-        transforms.RandomCrop((128, 128)),       # crop aleatori
+        transforms.Resize((256, 256)),       # un poco más grande para poder recortar
+        transforms.RandomCrop((224, 224)),   # recorte aleatorio → más variedad
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.1),
-        transforms.RandomRotation(degrees=20),
-        transforms.RandomPerspective(distortion_scale=0.3, p=0.4),
-        transforms.ColorJitter(
-            brightness=0.4, contrast=0.4,
-            saturation=0.4, hue=0.1
-        ),
-        transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.5)),
+        transforms.RandomRotation(degrees=15),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225]),
-        transforms.RandomErasing(p=0.3, scale=(0.02, 0.15)),  # tapa zones aleatòries
+        transforms.RandomErasing(p=0.2, scale=(0.02, 0.1)),
     ])
 
     eval_transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((224, 224)),       # sin augmentation en val/test
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225]),
@@ -78,9 +70,7 @@ def make_loaders(config):
     return train_ldr, val_ldr, test_ldr
 
 
-# ─────────────────────────────────────────────
-# MODELO CNN
-# ─────────────────────────────────────────────
 def make_model(config, device="cuda"):
-    model = WikiArtCNN(n_classes=config.classes, kernels=config.kernels).to(device)
+    model = WikiArtResNet(n_classes=config.classes).to(device)
+    model.freeze_backbone()  # Fase 1: solo entrenamos la cabeza
     return model

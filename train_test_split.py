@@ -1,146 +1,64 @@
 import os
 import shutil
 import random
-import matplotlib.pyplot as plt
-from collections import defaultdict
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
-input_folder  = '/home/edxnG02/processedImages_total'
-output_folder = '/home/edxnG02/split'
-min_images    = 400   
-max_images    = 600   
-train_ratio   = 0.8
+input_folder  = '/home/edxnG02/processedImages_balanced'
+output_folder = '/home/edxnG02/split_style'
+train_ratio   = 0.80
+val_ratio     = 0.10
+test_ratio    = 0.10   # el resto
 random.seed(42)
 
-categories = [
-    'Abstract_Expressionism',
-    'Action_painting',
-    'Analytical_Cubism',
-    'Art_Nouveau_Modern',
-    'Baroque',
-    'Color_Field_Painting',
-    'Contemporary_Realism',
-    'Cubism',
-    'Early_Renaissance',
-    'Expressionism',
-    'Fauvism',
-    'High_Renaissance',
-    'Impressionism',
-    'Mannerism_Late_Renaissance',
-    'Minimalism',
-    'Naive_Art_Primitivism',
-    'New_Realism',
-    'Northern_Renaissance',
-    'Pointillism',
-    'Pop_Art',
-    'Post_Impressionism',
-    'Realism',
-    'Rococo',
-    'Romanticism',
-    'Symbolism',
-    'Synthetic_Cubism',
-    'Ukiyo_e'
-]
-
 # ─────────────────────────────────────────────
-# AGRUPAR IMÁGENES POR AUTOR
+# CREAR SPLIT TRAIN / VAL / TEST
 # ─────────────────────────────────────────────
-print("Agrupando imágenes por autor...")
-autor_imagenes = defaultdict(list)
+print(f"Creando split {int(train_ratio*100)}/{int(val_ratio*100)}/{int(test_ratio*100)}...\n")
 
-for category in categories:
+total_train = total_val = total_test = 0
+
+for category in sorted(os.listdir(input_folder)):
     cat_path = os.path.join(input_folder, category)
     if not os.path.isdir(cat_path):
-        print(f"Carpeta no encontrada: {cat_path}")
         continue
-    for filename in os.listdir(cat_path):
-        if filename.endswith(('.jpg', '.jpeg', '.JPG')):
-            autor = filename.split('_')[0]
-            autor_imagenes[autor].append(os.path.join(cat_path, filename))
 
-# ─────────────────────────────────────────────
-# FILTRAR: mínimo 400, capear a 600
-# ─────────────────────────────────────────────
-print(f"\nFiltrando autores con mínimo {min_images} imágenes (máximo {max_images})...")
+    imagenes = [f for f in os.listdir(cat_path)
+                if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    random.shuffle(imagenes)
 
-autores_validos = {}
-for autor, imgs in autor_imagenes.items():
-    if len(imgs) >= min_images:
-        random.shuffle(imgs)
-        autores_validos[autor] = imgs[:max_images]  # ← capping aquí, antes del split
+    n        = len(imagenes)
+    n_train  = int(n * train_ratio)
+    n_val    = int(n * val_ratio)
+    # el test agafa el que queda per evitar perdre imatges per arrodoniment
+    n_test   = n - n_train - n_val
 
-print(f"Autores válidos: {len(autores_validos)}")
-for autor, imgs in sorted(autores_validos.items(), key=lambda x: -len(x[1])):
-    print(f"  {autor}: {len(imgs)} imágenes (usadas para train/test)")
-
-# ─────────────────────────────────────────────
-# CREAR SPLIT TRAIN / TEST
-# ─────────────────────────────────────────────
-print(f"\nCreando split {int(train_ratio*100)}/{int((1-train_ratio)*100)}...")
-
-total_train = 0
-total_test  = 0
-
-for autor, imagenes in autores_validos.items():
-    n_train = int(len(imagenes) * train_ratio)
-    
     train_imgs = imagenes[:n_train]
-    test_imgs  = imagenes[n_train:]
+    val_imgs   = imagenes[n_train:n_train + n_val]
+    test_imgs  = imagenes[n_train + n_val:]
 
-    train_path = os.path.join(output_folder, 'train', autor)
-    test_path  = os.path.join(output_folder, 'test', autor)
-    os.makedirs(train_path, exist_ok=True)
-    os.makedirs(test_path,  exist_ok=True)
-
-    for img in train_imgs:
-        shutil.copy(img, os.path.join(train_path, os.path.basename(img)))
-    for img in test_imgs:
-        shutil.copy(img, os.path.join(test_path, os.path.basename(img)))
+    # Crear carpetes destí
+    for split, imgs in [('train', train_imgs), ('val', val_imgs), ('test', test_imgs)]:
+        split_path = os.path.join(output_folder, split, category)
+        os.makedirs(split_path, exist_ok=True)
+        for img in imgs:
+            shutil.copy(os.path.join(cat_path, img), os.path.join(split_path, img))
 
     total_train += len(train_imgs)
+    total_val   += len(val_imgs)
     total_test  += len(test_imgs)
-    print(f"  {autor}: {len(train_imgs)} train | {len(test_imgs)} test")
+
+    print(f"  {category:<35}  train: {len(train_imgs):>4}  |  val: {len(val_imgs):>4}  |  test: {len(test_imgs):>4}")
 
 # ─────────────────────────────────────────────
 # RESUMEN FINAL
 # ─────────────────────────────────────────────
-print(f"\n{'='*50}")
-print(f"TOTAL train : {total_train}")
-print(f"TOTAL test  : {total_test}")
-print(f"Autores     : {len(autores_validos)}")
-print(f"Guardat a   : {output_folder}")
-print(f"{'='*50}")
-
-# ─────────────────────────────────────────────
-# HISTOGRAMA AUTORES FINALES
-# ─────────────────────────────────────────────
-print("\nGenerando histograma de autores finales...")
-
-autors_ordenats = sorted(autores_validos.items(), key=lambda x: -len(x[1]))
-noms   = [a[0] for a in autors_ordenats]
-counts = [len(a[1]) for a in autors_ordenats]
-
-fig, ax = plt.subplots(figsize=(16, 7))
-bars = ax.bar(range(len(noms)), counts, color='steelblue', edgecolor='white')
-ax.set_xticks(range(len(noms)))
-ax.set_xticklabels(noms, rotation=45, ha='right', fontsize=9)
-ax.set_title(f'Autors seleccionats per al model (min {min_images} – max {max_images} imatges)', 
-             fontsize=14, fontweight='bold')
-ax.set_xlabel('Autor')
-ax.set_ylabel("Nombre d'imatges usades")
-ax.set_ylim(0, max_images + 50)
-ax.grid(axis='y', alpha=0.3)
-ax.axhline(y=min_images, color='red',    linestyle='--', alpha=0.6, label=f'Mínim ({min_images})')
-ax.axhline(y=max_images, color='orange', linestyle='--', alpha=0.6, label=f'Màxim ({max_images})')
-ax.legend()
-
-for i, v in enumerate(counts):
-    ax.text(i, v + 5, str(v), ha='center', va='bottom', fontsize=8)
-
-plt.tight_layout()
-hist_path = os.path.join(output_folder, 'histograma_autors_finals.png')
-plt.savefig(hist_path, dpi=150, bbox_inches='tight')
-plt.show()
-print(f"Histograma guardat a: {hist_path}")
+print(f"\n{'='*60}")
+print(f"TOTAL train  : {total_train}")
+print(f"TOTAL val    : {total_val}")
+print(f"TOTAL test   : {total_test}")
+print(f"TOTAL global : {total_train + total_val + total_test}")
+print(f"Classes      : {len(os.listdir(os.path.join(output_folder, 'train')))}")
+print(f"Guardat a    : {output_folder}")
+print(f"{'='*60}")

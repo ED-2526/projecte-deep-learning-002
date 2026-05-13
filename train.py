@@ -17,7 +17,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, config, device=
     for epoch in tqdm(range(config.epochs)):
 
         # ── Fase 2: en época 5 descongelamos todo el backbone ──
-        if epoch == 5:
+        if epoch == 2:
             model.unfreeze_backbone()
             # El backbone aprende muy lento (1e-5) para no destruir
             # lo que ya sabe de ImageNet

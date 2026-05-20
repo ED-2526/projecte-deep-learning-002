@@ -101,6 +101,32 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
     print(cm)
 
+    print("\nTP / TN / FP / FN PER CLASSE:\n")
+
+    for i, class_name in enumerate(class_names):
+
+        TP = cm[i, i]
+
+        FP = cm[:, i].sum() - TP
+
+        FN = cm[i, :].sum() - TP
+
+        TN = cm.sum() - (TP + FP + FN)
+
+        print(f"{class_name}")
+        print(f"TP: {TP}")
+        print(f"TN: {TN}")
+        print(f"FP: {FP}")
+        print(f"FN: {FN}")
+        print("-" * 40)
+
+        wandb.log({
+            f"{class_name}_TP": TP,
+            f"{class_name}_TN": TN,
+            f"{class_name}_FP": FP,
+            f"{class_name}_FN": FN
+        })
+
     # Guardar imagen de la matriz
     plt.figure(figsize=(32, 18))
 

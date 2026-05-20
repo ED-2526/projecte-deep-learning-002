@@ -50,7 +50,7 @@ def make_loaders(config):
         transforms.RandomHorizontalFlip(p=0.5),
 
         # Rotació més suau
-        transforms.RandomRotation(degrees=5),
+        transforms.RandomRotation(degrees=12),
 
         # Color jitter més conservador
         transforms.ColorJitter(
@@ -68,7 +68,7 @@ def make_loaders(config):
         ),
 
         # RandomErasing eliminat
-        # transforms.RandomErasing(p=0.2, scale=(0.02, 0.1)),
+        transforms.RandomErasing(p=0.15, scale=(0.02, 0.08)),
     ])
 
     # ─────────────────────────────────────────────

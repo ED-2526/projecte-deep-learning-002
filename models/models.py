@@ -27,5 +27,9 @@ class WikiArtResNet(nn.Module):
                 param.requires_grad = False
 
     def unfreeze_backbone(self):
-        for param in self.model.parameters():
-            param.requires_grad = True
+        for name, param in self.model.named_parameters():
+            # Només layer4 i fc entrenables
+            if 'layer3' in name or 'layer4' in name or 'fc' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False

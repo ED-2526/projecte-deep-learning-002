@@ -17,19 +17,26 @@ def train(model, train_loader, val_loader, criterion, optimizer, config, device=
     for epoch in tqdm(range(config.epochs)):
 
         # ── Fase 2: en época 5 descongelamos todo el backbone ──
-        if epoch == 2:
+        if epoch == 5:
             model.unfreeze_backbone()
             # El backbone aprende muy lento (1e-5) para no destruir
             # lo que ya sabe de ImageNet
             # La cabeza aprende más rápido (1e-4)
             optimizer = torch.optim.AdamW([
-                {'params': [p for n, p in model.model.named_parameters()
-                            if 'fc' not in n], 'lr': 1e-5},
-                {'params': model.model.fc.parameters(), 'lr': 1e-4}
-            ], weight_decay=1e-4)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=config.epochs - 5
-            )
+                {
+                    'params': [
+                        p for n, p in model.model.named_parameters()
+                        if 'layer4' in n
+                    ],
+                    'lr': 5e-6
+                },
+
+                {
+                    'params': model.model.fc.parameters(),
+                    'lr': 1e-4
+                }
+
+            ], weight_decay=5e-4)
             print("  → Backbone descongelat, fine-tuning complet activat")
 
         # ── Train ──

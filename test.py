@@ -13,7 +13,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import label_binarize
 
 
-def test(model, test_loader, device="cuda", save: bool = True):
+def test(model, test_loader, epoch, device="cuda", save: bool = True):
     """
     Evalúa el modelo sobre test:
     - Accuracy global
@@ -89,7 +89,10 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
     print("=" * 70)
 
-    wandb.log({"test_accuracy": test_accuracy})
+    wandb.log(
+        {"test_accuracy": test_accuracy},
+        step=epoch
+    )
 
     # ─────────────────────────────────────────────
     # MATRIZ DE CONFUSIÓN
@@ -125,9 +128,12 @@ def test(model, test_loader, device="cuda", save: bool = True):
             f"{class_name}_TN": TN,
             f"{class_name}_FP": FP,
             f"{class_name}_FN": FN
-        })
+        }, step=epoch)
 
-    # Guardar imagen de la matriz
+    # ─────────────────────────────────────────────
+    # GUARDAR MATRIZ DE CONFUSIÓN
+    # ─────────────────────────────────────────────
+
     plt.figure(figsize=(32, 18))
 
     plt.imshow(
@@ -135,6 +141,22 @@ def test(model, test_loader, device="cuda", save: bool = True):
         interpolation='nearest',
         cmap=plt.cm.Blues
     )
+
+    # Añadir números dentro de cada celda
+    threshold = cm.max() / 2
+
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+
+            plt.text(
+                j,
+                i,
+                format(cm[i, j], 'd'),
+                ha="center",
+                va="center",
+                color="white" if cm[i, j] > threshold else "black",
+                fontsize=10
+            )
 
     plt.title("Matriz de Confusión")
 
@@ -171,10 +193,10 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
     wandb.log({
         "confusion_matrix": wandb.Image("confusion_matrix.png")
-    })
+    }, step=epoch)
 
     # ─────────────────────────────────────────────
-    # CLASSIFICATION REPORT (PRECISION / RECALL / F1)
+    # CLASSIFICATION REPORT
     # ─────────────────────────────────────────────
 
     print("\nCLASSIFICATION REPORT:")
@@ -189,7 +211,7 @@ def test(model, test_loader, device="cuda", save: bool = True):
     print(report)
 
     # ─────────────────────────────────────────────
-    # ACCURACY POR AUTOR (CLAVE PARA DESBALANCEO)
+    # ACCURACY POR AUTOR
     # ─────────────────────────────────────────────
 
     print("\nACCURACY POR AUTOR:")
@@ -223,10 +245,10 @@ def test(model, test_loader, device="cuda", save: bool = True):
         # Log individual a wandb
         wandb.log({
             f"accuracy_{class_name}": class_acc
-        })
+        }, step=epoch)
 
     # ─────────────────────────────────────────────
-    # NUEVO → ROC CURVES + AUC
+    # ROC CURVES + AUC
     # ─────────────────────────────────────────────
 
     print("\nGenerando ROC Curves...")
@@ -281,7 +303,7 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
     wandb.log({
         "roc_curves": wandb.Image("roc_curves.png")
-    })
+    }, step=epoch)
 
     print("ROC curves guardadas correctamente.")
 
@@ -334,7 +356,6 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
         model.eval()
 
-        # CANVIAT → ara uses 256x256
         dummy_input = torch.randn(1, 3, 256, 256).to(device)
 
         scripted = torch.jit.trace(model, dummy_input)
@@ -345,34 +366,8 @@ def test(model, test_loader, device="cuda", save: bool = True):
 
         wandb.save("confusion_matrix.png")
 
-        # NUEVO
         wandb.save("roc_curves.png")
 
         print("Model guardat correctament.")
 
-"""
-    if save:
-        print("\nExportando modelo a ONNX...")
-
-        dummy_input = torch.randn(1, 3, 118, 118).to(device)
-
-        torch.onnx.export(
-            model,
-            dummy_input,
-            "model.onnx",
-            export_params=True,
-            opset_version=11,
-            do_constant_folding=True,
-            input_names=['input'],
-            output_names=['output'],
-            dynamic_axes={
-                'input': {0: 'batch_size'},
-                'output': {0: 'batch_size'}
-            }
-        )
-
-        wandb.save("model.onnx")
-        wandb.save("confusion_matrix.png")
-
     print("\nEvaluación completada correctamente.")
-"""

@@ -71,11 +71,7 @@ def model_pipeline(cfg: dict):
         )
 
         # Test final
-        test(
-            model,
-            test_loader,
-            device=device
-        )
+        test(model,test_loader,epoch=config.epochs,device=device)
 
     return model
 

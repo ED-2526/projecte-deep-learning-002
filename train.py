@@ -69,7 +69,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, config, device=
             "val_loss"   : avg_val_loss,
             "val_acc"    : val_acc,
             "lr"         : scheduler.get_last_lr()[0]
-        }, step=example_ct)
+        }, step=epoch+1)
 
         print(f"Epoch {epoch+1:>3}/{config.epochs} | "
               f"Train loss: {avg_train_loss:.4f}  acc: {train_acc:.2f}% | "
@@ -81,7 +81,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, config, device=
             best_val_loss = avg_val_loss
             torch.save(model.state_dict(), "best_model.pth")
             print(f"  ✓ Nou millor model guardat (val_acc: {best_val_acc:.2f}%)")
-            wandb.log({"best_val_acc": best_val_acc})
+            wandb.log({"best_val_acc": best_val_acc}, step=epoch + 1)
 
     print(f"\nEntrenament acabat. Millor val_acc: {best_val_acc:.2f}%")
 
